@@ -1,0 +1,45 @@
+---
+#- name: Install NGINX Agent
+#  command: curl -k  "https://{{ mns_ipaddress }}/install/nginx-agent" | sudo sh
+- name: Download and install nginx-agent
+  shell: 
+    curl -k  "https://{{ nms_ipaddress }}/install/nginx-agent" | sudo sh
+     #wget --no-check-certificate https://{{ nms_ipaddress }}/install/nginx-agent -O - | sudo sh
+  args:
+    executable: /bin/bash
+
+  become: yes
+
+- name: Enable and start nginx-agent service
+  service:
+    name: nginx-agent
+    state: started
+    enabled: yes
+  become: yes
+      
+
+- name: Insert nginx-agent configuration
+  blockinfile:
+    path: /etc/nginx-agent/nginx-agent.conf
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - DO NOT EDIT"
+    content: |
+      # Enable NAP and Advanced Metrics
+      extensions:
+        - advanced-metrics
+        - nginx-app-protect
+        - nap-monitoring
+
+      # Enable NGINX App Protect WAF precompiled policies
+      nginx_app_protect:
+        precompiled_publication: true
+
+      # NGINX App Protect Monitoring config
+      nap_monitoring:
+        # Buffer size for collector. Will contain log lines and parsed log lines
+        collector_buffer_size: 50000
+        # Buffer size for processor. Will contain log lines and parsed log lines
+        processor_buffer_size: 50000
+        # Syslog server IP address the collector will be listening to
+        syslog_ip: "127.0.0.1"
+        # Syslog server port the collector will be listening to
+        syslog_port: 514

@@ -1,0 +1,6 @@
+- name: Restart nginx-agent service
+  service:
+    name: nginx-agent
+    state: restarted
+  become: yes
+
